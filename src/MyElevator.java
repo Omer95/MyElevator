@@ -1,6 +1,4 @@
 import java.util.ArrayList;
-import java.lang.Math;
-import java.lang.Runnable;
 
 enum ElevatorState {
     UP, DOWN, STOP;
@@ -81,6 +79,20 @@ class Elevator {
 
 }
 
+class User {
+    private String userId;
+    private int userFloor;
+    private ArrayList<Elevator> elevatorsToUse;
+
+    public User(String userId, ArrayList<Elevator> elevatorsToUse) {
+        this.userId = userId;
+        this.userFloor = 0;
+        this.elevatorsToUse = elevatorsToUse;
+    }
+
+
+}
+
 public class MyElevator {
 
     public static final int MAX_FLOORS = 20;
@@ -96,7 +108,7 @@ public class MyElevator {
         elevators.add(el2);
         elevators.add(el3);
 
-        el1.move(MAX_FLOORS);
+        el1.move(2);
         el2.move(5);
 
 
