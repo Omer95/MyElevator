@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.lang.Math;
+import java.lang.Runnable;
 
 enum ElevatorState {
     UP, DOWN, STOP;
@@ -43,6 +44,41 @@ class Elevator {
         );
     }
 
+    private void startMoving(int destination) {
+        System.out.println("Elevator No: " + this.elevatorId + " moving from: " + this.currentFloor + " to: " + destination);
+        if (destination > this.currentFloor) {
+            for (int i = 0; i < destination; i++) {
+                try {
+                    Thread.sleep(2000);
+                    this.currentFloor++;
+                    System.out.println("Elevator No: " + this.elevatorId + " on floor: " + this.currentFloor);
+                }
+                catch (Exception e) {
+                    System.out.println("Exception caught");
+                }
+
+            }
+        } else if (destination < this.currentFloor) {
+            System.out.println("Elevator No: " + this.elevatorId + " moving from: " + this.currentFloor + " to: " + destination);
+            for (int i = this.currentFloor; i > destination; i--) {
+                try {
+                    Thread.sleep(2000);
+                    this.currentFloor--;
+                    System.out.println("Elevator No: " + this.elevatorId + " on floor: " + this.currentFloor);
+                }
+                catch (Exception e) {
+                    System.out.println("Exception caught");
+                }
+            }
+        } else {
+            System.out.println("Elevator No: " + this.elevatorId + " is already on floor: " + destination);
+        }
+    }
+    public void move(int destinationFloor) {
+        Thread t = new Thread(() -> startMoving(destinationFloor));
+        t.start();
+    }
+
 }
 
 public class MyElevator {
@@ -59,6 +95,9 @@ public class MyElevator {
         elevators.add(el1);
         elevators.add(el2);
         elevators.add(el3);
+
+        el1.move(MAX_FLOORS);
+        el2.move(5);
 
 
     }
