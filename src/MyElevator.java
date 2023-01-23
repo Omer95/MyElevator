@@ -45,6 +45,7 @@ class Elevator {
     private void startMoving(int destination) {
         System.out.println("Elevator No: " + this.elevatorId + " moving from: " + this.currentFloor + " to: " + destination);
         if (destination > this.currentFloor) {
+            this.state = ElevatorState.UP;
             for (int i = 0; i < destination; i++) {
                 try {
                     Thread.sleep(2000);
@@ -56,8 +57,10 @@ class Elevator {
                 }
 
             }
+            this.state = ElevatorState.STOP;
         } else if (destination < this.currentFloor) {
             System.out.println("Elevator No: " + this.elevatorId + " moving from: " + this.currentFloor + " to: " + destination);
+            this.state = ElevatorState.DOWN;
             for (int i = this.currentFloor; i > destination; i--) {
                 try {
                     Thread.sleep(2000);
@@ -68,6 +71,7 @@ class Elevator {
                     System.out.println("Exception caught");
                 }
             }
+            this.state = ElevatorState.STOP;
         } else {
             System.out.println("Elevator No: " + this.elevatorId + " is already on floor: " + destination);
         }
