@@ -6,15 +6,17 @@ enum ElevatorState {
 enum Direction {
     UP, DOWN;
 }
-class Elevator {
+class Elevator extends Thread{
     private int elevatorId;
     private ElevatorState state;
     private int currentFloor;
+    private int destination;
 
     public Elevator(int elevatorId) {
         this.elevatorId = elevatorId;
         this.state = ElevatorState.STOP;
         this.currentFloor = 0;
+        this.destination = -1;
     }
 
     public int getElevatorId() {
@@ -42,11 +44,11 @@ class Elevator {
         );
     }
 
-    private void startMoving(int destination) {
-        System.out.println("Elevator No: " + this.elevatorId + " moving from: " + this.currentFloor + " to: " + destination);
-        if (destination > this.currentFloor) {
+    public void run() {
+        System.out.println("Elevator No: " + this.elevatorId + " moving from: " + this.currentFloor + " to: " + this.destination);
+        if (this.destination > this.currentFloor) {
             this.state = ElevatorState.UP;
-            for (int i = 0; i < destination; i++) {
+            for (int i = 0; i < this.destination; i++) {
                 try {
                     Thread.sleep(2000);
                     this.currentFloor++;
@@ -58,10 +60,10 @@ class Elevator {
 
             }
             this.state = ElevatorState.STOP;
-        } else if (destination < this.currentFloor) {
-            System.out.println("Elevator No: " + this.elevatorId + " moving from: " + this.currentFloor + " to: " + destination);
+        } else if (this.destination < this.currentFloor) {
+            System.out.println("Elevator No: " + this.elevatorId + " moving from: " + this.currentFloor + " to: " + this.destination);
             this.state = ElevatorState.DOWN;
-            for (int i = this.currentFloor; i > destination; i--) {
+            for (int i = this.currentFloor; i > this.destination; i--) {
                 try {
                     Thread.sleep(2000);
                     this.currentFloor--;
@@ -73,12 +75,12 @@ class Elevator {
             }
             this.state = ElevatorState.STOP;
         } else {
-            System.out.println("Elevator No: " + this.elevatorId + " is already on floor: " + destination);
+            System.out.println("Elevator No: " + this.elevatorId + " is already on floor: " + this.destination);
         }
     }
     public void move(int destinationFloor) {
-        Thread t = new Thread(() -> startMoving(destinationFloor));
-        t.start();
+        this.destination = destinationFloor;
+        this.start();
     }
 
 }
