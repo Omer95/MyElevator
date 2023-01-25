@@ -79,6 +79,15 @@ class Elevator extends Thread{
         }
     }
     public void move(int destinationFloor) {
+        while (this.isAlive()) {
+            try {
+                System.out.println("Elevator is busy");
+                Thread.sleep(2000);
+            }
+            catch (Exception e) {
+                System.out.println("Exception caught");
+            }
+        }
         this.destination = destinationFloor;
         this.start();
     }
@@ -115,7 +124,7 @@ public class MyElevator {
         elevators.add(el3);
 
         el1.move(2);
-        el2.move(5);
+        el1.move(5);
 
 
     }
