@@ -39,6 +39,7 @@ class Elevator extends Thread{
     public void addUserDestination(int userId, int userFloor, int destination) {
         int[] floorAndDest = {userFloor, destination};
         this.userDestinations.put(userId, floorAndDest);
+        System.out.println("UserDestination Updated: " + this.userDestinations.toString());
     }
 
     public String toString() {
@@ -147,6 +148,7 @@ class User {
         for (int i = 0; i < this.elevatorsToUse.size(); i++) {
             if (this.elevatorsToUse.get(i).getElevatorState() == ElevatorState.STOP &&
                 this.elevatorsToUse.get(i).getCurrentFloor() == this.userFloor) {
+                System.out.println("Calling Elevator: " + this.elevatorsToUse.get(i).getElevatorId());
                 this.elevatorsToUse.get(i).addUserDestination(this.userId, this.userFloor, destination);
                 break;
             }
@@ -180,8 +182,8 @@ public class MyElevator {
         }
         catch (Exception e) {
             System.out.println("Waiting a bit");
-            omer.callElevator(10);
         }
+        omer.callElevator(10);
 
 
     }
