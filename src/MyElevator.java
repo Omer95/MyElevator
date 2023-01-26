@@ -12,12 +12,14 @@ class Elevator extends Thread{
     private ElevatorState state;
     private int currentFloor;
     private HashMap<Integer, int[]> userDestinations;
+    private ArrayList<User> userCallList;
 
     public Elevator(int elevatorId) {
         this.elevatorId = elevatorId;
         this.state = ElevatorState.STOP;
         this.currentFloor = 0;
         this.userDestinations = new HashMap<Integer, int[]>();
+        this.userCallList = new ArrayList<User>();
     }
 
     public int getElevatorId() {
@@ -40,6 +42,9 @@ class Elevator extends Thread{
         int[] floorAndDest = {userFloor, destination};
         this.userDestinations.put(userId, floorAndDest);
         System.out.println("UserDestination Updated: " + this.userDestinations.toString());
+    }
+    public void addToUserCallList(User user) {
+        this.userCallList.add(user);
     }
 
     public String toString() {
@@ -126,11 +131,13 @@ class User {
     private int userId;
     private int userFloor;
     private ArrayList<Elevator> elevatorsToUse;
+    private int destination;
 
     public User(int userId, ArrayList<Elevator> elevatorsToUse) {
         this.userId = userId;
         this.userFloor = 0;
         this.elevatorsToUse = elevatorsToUse;
+        this.destination = 0;
     }
 
     public int getUserFloor() {
@@ -144,12 +151,20 @@ class User {
     }
 
     public void callElevator(int destination) {
-        // if any elevator is on the same floor and stopped
+        this.destination = destination;
+        boolean up = false;
+        if (destination > this.userFloor) {
+            up = true;
+        }
         for (int i = 0; i < this.elevatorsToUse.size(); i++) {
-            if (this.elevatorsToUse.get(i).getElevatorState() == ElevatorState.STOP &&
-                this.elevatorsToUse.get(i).getCurrentFloor() == this.userFloor) {
-                System.out.println("Calling Elevator: " + this.elevatorsToUse.get(i).getElevatorId());
-                this.elevatorsToUse.get(i).addUserDestination(this.userId, this.userFloor, destination);
+            Elevator elevator = this.elevatorsToUse.get(i);
+            if ((elevator.getElevatorState() == ElevatorState.STOP && elevator.getCurrentFloor() == this.userFloor) || // same floor as user and stopped
+               (elevator.getElevatorState() != ElevatorState.UP && this.userFloor == 0) || // user is on ground floor and elevator not going up
+               (up && this.userFloor > elevator.getCurrentFloor() && elevator.getElevatorState() != ElevatorState.DOWN) || // user wants to go up and elevator coming up from below
+               (!up && this.userFloor < elevator.getCurrentFloor() && elevator.getElevatorState() != ElevatorState.UP) || // user wants to go down and elevator coming down from above
+                elevator.getElevatorState() == ElevatorState.STOP) { // elevator is stopped (not very efficient)
+                System.out.println("Calling Elevator: " + elevator.getElevatorId());
+                elevator.addToUserCallList(this);
                 break;
             }
         }
@@ -187,20 +202,6 @@ public class MyElevator {
 
 
     }
-
-//    public Elevator callElevatorUp(ArrayList<Elevator> elevators) {
-//        Elevator tmp = elevators.get(0);
-//        int floorDiff = MAX_FLOORS;
-//        for (int i = 0; i < elevators.size(); i++) {
-//            if (Math.abs(myCurrentFloor - elevators.get(i).getCurrentFloor()) < floorDiff &&
-//                elevators.) {
-//                floorDiff = Math.abs(myCurrentFloor - elevators.get(i).getCurrentFloor());
-//                tmp = elevators.get(i);
-//            }
-//        }
-//        tmp.changeFloor(myCurrentFloor);
-//        return tmp;
-//    }
 
 
 }
