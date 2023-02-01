@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Queue;
+import java.util.Stack;
 
 enum ElevatorState {
     UP, DOWN, STOP;
@@ -11,15 +13,19 @@ class Elevator extends Thread{
     private int elevatorId;
     private ElevatorState state;
     private int currentFloor;
-    private HashMap<Integer, int[]> userDestinations;
-    private ArrayList<User> userCallList;
+//    private HashMap<Integer, int[]> userDestinations;
+//    private ArrayList<User> userCallList;
+    private ArrayList<User> userCallStack;
+    private ArrayList<User> usersInElevator;
 
     public Elevator(int elevatorId) {
         this.elevatorId = elevatorId;
         this.state = ElevatorState.STOP;
         this.currentFloor = 0;
-        this.userDestinations = new HashMap<Integer, int[]>();
-        this.userCallList = new ArrayList<User>();
+//        this.userDestinations = new HashMap<Integer, int[]>();
+//        this.userCallList = new ArrayList<User>();
+        this.userCallStack = new ArrayList<User>();
+        this.usersInElevator = new ArrayList<User>();
     }
 
     public int getElevatorId() {
@@ -38,13 +44,17 @@ class Elevator extends Thread{
     public void changeFloor(int floor) {
         this.currentFloor = floor;
     }
-    public void addUserDestination(int userId, int userFloor, int destination) {
-        int[] floorAndDest = {userFloor, destination};
-        this.userDestinations.put(userId, floorAndDest);
-        System.out.println("UserDestination Updated: " + this.userDestinations.toString());
-    }
-    public void addToUserCallList(User user) {
-        this.userCallList.add(user);
+//    public void addUserDestination(int userId, int userFloor, int destination) {
+//        int[] floorAndDest = {userFloor, destination};
+//        this.userDestinations.put(userId, floorAndDest);
+//        System.out.println("UserDestination Updated: " + this.userDestinations.toString());
+//    }
+//    public void addToUserCallList(User user) {
+//        this.userCallList.add(user);
+//    }
+    public void addToUserCallStack(User user) {
+        this.userCallStack.add(user);
+        System.out.println("User: " + user.getUserId() + " called elevator");
     }
 
     public String toString() {
@@ -54,76 +64,75 @@ class Elevator extends Thread{
                         "\nCurrent Floor: " + this.currentFloor
         );
     }
-
-//    public void fun() {
-//        System.out.println("Elevator No: " + this.elevatorId + " moving from: " + this.currentFloor + " to: " + this.destination);
-//        if (this.destination > this.currentFloor) {
-//            this.state = ElevatorState.UP;
-//            for (int i = 0; i < this.destination; i++) {
-//                try {
-//                    Thread.sleep(2000);
-//                    this.currentFloor++;
-//                    System.out.println("Elevator No: " + this.elevatorId + " on floor: " + this.currentFloor);
-//                }
-//                catch (Exception e) {
-//                    System.out.println("Exception caught");
-//                }
-//
-//            }
-//            this.state = ElevatorState.STOP;
-//        } else if (this.destination < this.currentFloor) {
-//            System.out.println("Elevator No: " + this.elevatorId + " moving from: " + this.currentFloor + " to: " + this.destination);
-//            this.state = ElevatorState.DOWN;
-//            for (int i = this.currentFloor; i > this.destination; i--) {
-//                try {
-//                    Thread.sleep(2000);
-//                    this.currentFloor--;
-//                    System.out.println("Elevator No: " + this.elevatorId + " on floor: " + this.currentFloor);
-//                }
-//                catch (Exception e) {
-//                    System.out.println("Exception caught");
-//                }
-//            }
-//            this.state = ElevatorState.STOP;
-//        } else {
-//            System.out.println("Elevator No: " + this.elevatorId + " is already on floor: " + this.destination);
-//        }
-//    }
     public void run() {
         while (true) {
-            // poll elevator destinations and call stack
-            if (this.userDestinations.isEmpty()) {
+            // poll user call list
+            if (this.userCallStack.isEmpty()) {
+                // check if users in elevator is empty, otherwise go to destinations
+                System.out.println("Elevator: " + this.elevatorId + " is resting");
                 try {
-                    System.out.println("Elevator is idle");
                     Thread.sleep(2000);
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     System.out.println("Exception caught");
                 }
             } else {
-                for (int i = 0; i < this.userDestinations.size(); i++) {
-                    System.out.println(this.userDestinations.toString());
+                // move to next user
+                User nextUser = this.userCallStack.get(0);
+                if (nextUser.getGoingUp()) {
+                    this.changeElevatorState(ElevatorState.UP);
+                    // go up
+                    for (int i = this.currentFloor; i < nextUser.getDestination(); i++) {
+                        // add user to elevator
+                        for (User user : this.userCallStack) {
+                            if (user.getUserFloor() == this.currentFloor) {
+                                System.out.println("User: " + user.getUserId() + " got on elevator: " + this.elevatorId);
+                                this.usersInElevator.add(user);
+                                this.userCallStack.remove(user);
+                            }
+                        }
+                        // drop user off on their floor and update users' floors
+                        for (User user : this.usersInElevator) {
+                            user.setUserFloor(this.currentFloor);
+                            if (user.getDestination() == this.currentFloor) {
+                                System.out.println("Dropping off user: " + user.getUserId() + " on floor: " + this.currentFloor);
+                                this.usersInElevator.remove(user);
+                                user.setGoingUp(null);
+                            }
+                        }
+                        // go up one floor
+                        this.currentFloor++;
+                    }
+                } else {
+                    this.changeElevatorState(ElevatorState.DOWN);
+                    // go down
+                    for (int i = this.currentFloor; i > nextUser.getDestination(); i--) {
+                        // add user to elevator
+                        for (User user : this.userCallStack) {
+                            if (user.getUserFloor() == this.currentFloor) {
+                                System.out.println("User: " + user.getUserId() + " got on elevator: " + this.elevatorId);
+                                this.usersInElevator.add(user);
+                                this.userCallStack.remove(user);
+                            }
+                        }
+                        // drop user off on their floor and update users' floors
+                        for (User user : this.usersInElevator) {
+                            user.setUserFloor(this.currentFloor);
+                            if (user.getDestination() == this.currentFloor) {
+                                System.out.println("Dropping off user: " + user.getUserId() + " on floor: " + this.currentFloor);
+                                this.usersInElevator.remove(user);
+                                user.setGoingUp(null);
+                            }
+                        }
+                        // go down one floor
+                        this.currentFloor--;
+                    }
                 }
-                try {
-                    Thread.sleep(2000);
-                } catch (Exception e) {
-                    System.out.println("Exception caught");
-                }
+                // remove next user
+                this.userCallStack.remove(nextUser);
             }
         }
     }
-//    public void move(int destinationFloor) {
-//        while (this.isAlive()) {
-//            try {
-//                System.out.println("Elevator is busy");
-//                Thread.sleep(2000);
-//            }
-//            catch (Exception e) {
-//                System.out.println("Exception caught");
-//            }
-//        }
-//        this.destination = destinationFloor;
-//        this.start();
-//    }
 
 }
 
@@ -132,12 +141,14 @@ class User {
     private int userFloor;
     private ArrayList<Elevator> elevatorsToUse;
     private int destination;
+    private Boolean goingUp;
 
     public User(int userId, ArrayList<Elevator> elevatorsToUse) {
         this.userId = userId;
         this.userFloor = 0;
         this.elevatorsToUse = elevatorsToUse;
         this.destination = 0;
+        this.goingUp = null;
     }
 
     public int getUserFloor() {
@@ -146,25 +157,34 @@ class User {
     public int getUserId() {
         return this.userId;
     }
+    public Boolean getGoingUp() {
+        return this.goingUp;
+    }
+    public int getDestination() {
+        return this.destination;
+    }
     public void setUserFloor(int floor) {
         this.userFloor = floor;
+    }
+    public void setGoingUp(Boolean up) {
+        this.goingUp = up;
     }
 
     public void callElevator(int destination) {
         this.destination = destination;
-        boolean up = false;
+        this.goingUp = false;
         if (destination > this.userFloor) {
-            up = true;
+            this.goingUp = true;
         }
         for (int i = 0; i < this.elevatorsToUse.size(); i++) {
             Elevator elevator = this.elevatorsToUse.get(i);
             if ((elevator.getElevatorState() == ElevatorState.STOP && elevator.getCurrentFloor() == this.userFloor) || // same floor as user and stopped
                (elevator.getElevatorState() != ElevatorState.UP && this.userFloor == 0) || // user is on ground floor and elevator not going up
-               (up && this.userFloor > elevator.getCurrentFloor() && elevator.getElevatorState() != ElevatorState.DOWN) || // user wants to go up and elevator coming up from below
-               (!up && this.userFloor < elevator.getCurrentFloor() && elevator.getElevatorState() != ElevatorState.UP) || // user wants to go down and elevator coming down from above
+               (goingUp && this.userFloor > elevator.getCurrentFloor() && elevator.getElevatorState() != ElevatorState.DOWN) || // user wants to go up and elevator coming up from below
+               (!goingUp && this.userFloor < elevator.getCurrentFloor() && elevator.getElevatorState() != ElevatorState.UP) || // user wants to go down and elevator coming down from above
                 elevator.getElevatorState() == ElevatorState.STOP) { // elevator is stopped (not very efficient)
                 System.out.println("Calling Elevator: " + elevator.getElevatorId());
-                elevator.addToUserCallList(this);
+                elevator.addToUserCallStack(this);
                 break;
             }
         }
